@@ -77,22 +77,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12a1bc008a53dca49b964d2c7203aed9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementSpeed: 3
-  rotationSpeed: 90
-  maxRayDistance: 10
-  smoothRotation: 0.3
-  movementTank: 0
-  resultAngle: 0
-  rayDistanceForward: 0
-  resultBackAngle: 0
-  rayDistanceBackward: 0
-  limitAngle: 0.5
-  angleRotation: {x: 0, y: 0, z: 0}
-  rayOffset: {x: 0, y: 0, z: 0}
+  maxSpeed: 10
+  maxAcceleration: 10
+  maxAirAcceleration: 1
+  maxGroundAngle: 25
+  jumpHeight: 2
+  maxAirJumps: 0
+  desiredJump: 0
+  velocity: {x: 0, y: 0, z: 0}
   myRig: {fileID: 0}
-  rayMask:
-    serializedVersion: 2
-    m_Bits: 0
+  minGroundDotProduct: 0.90630776
 --- !u!1 &4043752474456905264
 GameObject:
   m_ObjectHideFlags: 0
@@ -198,7 +192,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5720555898868726758}
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: 33.756516, z: 2.7379599}
+  m_LocalPosition: {x: -0, y: 1.652, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 7719914654653136763}
@@ -288,12 +282,12 @@ PrefabInstance:
     - target: {fileID: 6115651079529020086, guid: 9fa46bdc1719c8c4e8bcb03ec847d5db,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.31
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6115651079529020086, guid: 9fa46bdc1719c8c4e8bcb03ec847d5db,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 16.41
+      value: 1.02
       objectReference: {fileID: 0}
     - target: {fileID: 6115651079529020086, guid: 9fa46bdc1719c8c4e8bcb03ec847d5db,
         type: 3}

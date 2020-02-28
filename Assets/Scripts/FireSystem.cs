@@ -26,6 +26,7 @@ public class FireSystem : MonoBehaviour
 
     void OnParticleCollision(GameObject other)
     {
+        Debug.Log(other.name);
         other.SendMessage("DestroyEnemy");
     }
 }

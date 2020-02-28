@@ -5,111 +5,161 @@ using UnityEngine.Events;
 public class Tank : MonoBehaviour
 {
     public static UnityEvent DistanceTraveled = new UnityEvent();
-    #region Float
-    [SerializeField] float movementSpeed = 3.0f;
-    [SerializeField] float rotationSpeed = 90.0f;
-    [SerializeField] float maxRayDistance = 10.0f;
-    [SerializeField] float smoothRotation = 0.3f;
-    [SerializeField] float movementTank ;
-    [SerializeField] float resultAngle;
-    [SerializeField] float rayDistanceForward;
-    [SerializeField] float resultBackAngle;
-    [SerializeField] float rayDistanceBackward;
-    [SerializeField] float limitAngle = 0.5f;
-    #endregion
 
-    #region Vector3
-    [SerializeField] Vector3 angleRotation;
-    [SerializeField] Vector3 rayOffset;
-    #endregion
-    
+
+    [SerializeField, Range(0f, 100f)]
+	float maxSpeed = 10f;
+    [SerializeField, Range(0f, 100f)]
+	float maxAcceleration = 10f, maxAirAcceleration = 1f;
+    [SerializeField, Range(0, 90)]
+	float maxGroundAngle = 25f;
+    [SerializeField, Range(0f, 10f)]
+	float jumpHeight = 2f;
+    [SerializeField, Range(0, 5)]
+	int maxAirJumps = 0;
+    [SerializeField, Range(0f, 100f)]
+    float rotationSpeed;
+    int jumpPhase;
+    Vector3 desiredVelocity;
+    int groundContactCount;
+	bool OnGround => groundContactCount > 0;
+    public bool desiredJump;
+    public Vector3 velocity;
+   
+    Vector2 playerInput;
+    Vector3 contactNormal;
     [SerializeField] Rigidbody myRig;
     [SerializeField] LayerMask rayMask;
+    [SerializeField, Range(0f, 100f)]
+    float maxRayDistance;
+    [SerializeField, Range(0f, 100f)]
+    float smoothRotation;
+    float minGroundDotProduct;
 
 
-    // Start is called before the first frame update
+    void OnValidate()
+    {
+        minGroundDotProduct = Mathf.Cos(maxGroundAngle * Mathf.Deg2Rad);
+    }
     void Awake()
     {
         myRig = GetComponent<Rigidbody>();
+        OnValidate();
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
         TankMovement();
-         CheckGround();
-         CheckSlope();
-        TankRotation();
-       
+        CheckGround();
+    }
+    void Update()
+    {
+        playerInput.x = Input.GetAxis("Horizontal");
+        playerInput.y = Input.GetAxis("Vertical");
+        if(playerInput.y>0f)
+        {
+            DistanceTraveled.Invoke();
+        }
+        playerInput = Vector2.ClampMagnitude(playerInput,1f);
+        transform.Rotate(Vector3.up * rotationSpeed * playerInput.x * Time.deltaTime );
+        desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
+        //desiredJump |= Input.GetButtonDown("Jump");
     }
 
     void TankMovement()
     {
-        movementTank = Input.GetAxis("Vertical");
-        if(Input.GetAxis("Vertical") != 0)
-        {
-            DistanceTraveled.Invoke();
-        }
-        angleRotation = myRig.transform.localRotation.eulerAngles;
-        LimitMovement();
-        Vector3 movement = transform.forward * movementTank * movementSpeed * Time.deltaTime;
-        myRig.MovePosition(transform.position + movement);
+        
+        UpdateState();
+        AdjustVelocity();
+       if(desiredJump)
+       {
+           desiredJump = false;
+           Jump();
+       }
+       
+        myRig.velocity = velocity;
+        ClearState();
     }
-    void LimitMovement()
-    {
-           if(resultAngle > limitAngle && movementTank>0)
-        {
-            movementTank = 0;
-        }
-        if(resultBackAngle > limitAngle && movementTank<0)
-        {
-            movementTank = 0;
-        }
-    }
-    void TankRotation()
-    {
-        float rotateTank = Input.GetAxis("Horizontal");
-        transform.Rotate(Vector3.up * rotationSpeed * rotateTank * Time.deltaTime );
-    }
-    void CheckGround()
-    {
-        RaycastHit hit;
 
-
-        Physics.Raycast(transform.position, -transform.up,out hit,maxRayDistance, rayMask);
-        //transform.rotation = Quaternion.Lerp(transform.rotation,Quaternion.Euler(hit.normal),1);
-        Quaternion resultRotation = Quaternion.FromToRotation(transform.up,hit.normal) *transform.rotation;
-        transform.rotation = Quaternion.Lerp(transform.rotation, resultRotation,smoothRotation);
-    }
-    void CheckSlope()
+    void UpdateState()
     {
-        RaycastHit hitForward;
-        RaycastHit hitBackward;
-
-        Physics.Raycast(transform.position+rayOffset, transform.forward,out hitForward, rayDistanceForward, rayMask);
-        resultAngle = Vector3.Dot(Vector3.up,hitForward.normal);
-
-        Physics.Raycast(transform.position + rayOffset, -transform.forward, out hitBackward,rayDistanceBackward,rayMask);
-        resultBackAngle = Vector3.Dot(Vector3.up, hitBackward.normal);
-    }
-    void OnDrawGizmos()
-    {
-        DrawRaycast(transform.position, -transform.up, maxRayDistance, rayMask);
-        DrawRaycast(transform.position + rayOffset, transform.forward, rayDistanceForward, rayMask);
-        DrawRaycast(transform.position + rayOffset, -transform.forward, rayDistanceBackward, rayMask);
-    }   
-    void DrawRaycast(Vector3 Position, Vector3 Direction, float Distance, LayerMask Mask)
-    {
-        if(Physics.Raycast(Position, Direction, Distance, Mask))
+        velocity = myRig.velocity;
+        if(OnGround)
         {
-            Gizmos.color = Color.yellow;    
+            jumpPhase = 0;
+			if (groundContactCount > 1) 
+            {
+				contactNormal.Normalize();
+			}
         }
         else
         {
-            Gizmos.color = Color.red;
+            contactNormal = Vector3.up;
         }
-        Gizmos.DrawRay(Position,Direction * Distance);
-        
+    }
+    void Jump()
+    {	
+        if (OnGround || jumpPhase < maxAirJumps) 
+        {
+			jumpPhase += 1;
+            float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
+            float alignedSpeed = Vector3.Dot(velocity, contactNormal);
+			if (alignedSpeed > 0f) {
+				jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
+			}
+            velocity += contactNormal * jumpSpeed;
+        }
+    }
+    void ClearState()
+    {
+        groundContactCount = 0;
+        contactNormal= Vector3.zero;
+    }
+    void OnCollisionEnter(Collision collision)
+    {
+        EvaluateCollision(collision);
+    }
+    void OnCollisionStay (Collision collision) 
+    {   
+
+		EvaluateCollision(collision);
+	}	
+	void EvaluateCollision (Collision collision)
+    {
+        for (int i = 0; i < collision.contactCount; i++) 
+        {
+			Vector3 normal = collision.GetContact(i).normal;
+            if(normal.y >= minGroundDotProduct)
+            {
+                groundContactCount += 1;
+                contactNormal += normal;
+            }
+        }
+    }
+    Vector3 ProjectOnContactPlane (Vector3 vector) {
+		return vector - contactNormal * Vector3.Dot(vector, contactNormal);
+	}
+    void AdjustVelocity () 
+    {
+		Vector3 zAxis = ProjectOnContactPlane(transform.forward).normalized;
+        //Vector3 zAxis = transform.forward;
+		float currentZ = Vector3.Dot(velocity, zAxis);
+    	float acceleration = OnGround ? maxAcceleration : maxAirAcceleration;
+		float maxSpeedChange = acceleration * Time.deltaTime;
+		float newZ =
+			Mathf.MoveTowards(currentZ, desiredVelocity.z, maxSpeedChange);
+        velocity += zAxis * (newZ - currentZ);
+    }
+
+
+    void CheckGround()
+    {
+        RaycastHit hit;
+        Physics.Raycast(transform.position, -transform.up,out hit,maxRayDistance, rayMask);
+    
+        Quaternion resultRotation = Quaternion.FromToRotation(transform.up,hit.normal) *transform.rotation;
+        transform.rotation = Quaternion.Lerp(transform.rotation, resultRotation,smoothRotation);
     }
 
 }
