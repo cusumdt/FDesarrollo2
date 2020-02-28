@@ -20,7 +20,6 @@ public class GameManager : Singleton<GameManager>
         EnemySystem.EnemyDefeat.AddListener(EnemyDefeat);
         Tank.DistanceTraveled.AddListener(AddDistance);
         UIMenu.ResetStats.AddListener(Reset);
-
     }
 
     void Update()

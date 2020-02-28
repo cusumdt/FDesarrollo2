@@ -2580,7 +2580,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   textClock: {fileID: 1626030706}
-  clock: 1e+16
+  clock: 60
   textPoints: {fileID: 575883630}
   points: 0
   cantEnemys: 0

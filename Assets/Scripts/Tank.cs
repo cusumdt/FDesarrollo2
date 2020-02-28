@@ -19,21 +19,22 @@ public class Tank : MonoBehaviour
 	int maxAirJumps = 0;
     [SerializeField, Range(0f, 100f)]
     float rotationSpeed;
-    int jumpPhase;
-    Vector3 desiredVelocity;
-    int groundContactCount;
-	bool OnGround => groundContactCount > 0;
-    public bool desiredJump;
-    public Vector3 velocity;
-   
-    Vector2 playerInput;
-    Vector3 contactNormal;
-    [SerializeField] Rigidbody myRig;
-    [SerializeField] LayerMask rayMask;
     [SerializeField, Range(0f, 100f)]
     float maxRayDistance;
     [SerializeField, Range(0f, 100f)]
     float smoothRotation;
+    int jumpPhase;
+    Vector3 desiredVelocity;
+    int groundContactCount;
+	bool OnGround => groundContactCount > 0;
+    bool desiredJump;
+    public Vector3 velocity;
+    Vector3 initialPosition;
+    Vector2 playerInput;
+    Vector3 contactNormal;
+    [SerializeField] Rigidbody myRig;
+    [SerializeField] LayerMask rayMask;
+ 
     float minGroundDotProduct;
 
 
@@ -47,7 +48,10 @@ public class Tank : MonoBehaviour
         OnValidate();
     }
 
-    // Update is called once per frame
+    void Start()
+    {
+        initialPosition = transform.localPosition;
+    }
     void FixedUpdate()
     {
         TankMovement();
@@ -162,7 +166,7 @@ public class Tank : MonoBehaviour
     }
     void OnTriggerEnter(Collider other)
     {
-        transform.localPosition = new Vector3(163.6f,0.0f,181.2f);
+        transform.localPosition = initialPosition;
     }
 
     
