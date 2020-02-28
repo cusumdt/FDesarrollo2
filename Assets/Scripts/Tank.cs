@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+
 public class Tank : MonoBehaviour
 {
-    public static UnityEvent DistanceTraveled = new UnityEvent();
-
 
     [SerializeField, Range(0f, 100f)]
 	float maxSpeed = 10f;
@@ -34,6 +33,7 @@ public class Tank : MonoBehaviour
     Vector3 contactNormal;
     [SerializeField] Rigidbody myRig;
     [SerializeField] LayerMask rayMask;
+   
  
     float minGroundDotProduct;
 
@@ -51,6 +51,7 @@ public class Tank : MonoBehaviour
     void Start()
     {
         initialPosition = transform.localPosition;
+        GameManager.totalDistance.AddListener(Distance);
     }
     void FixedUpdate()
     {
@@ -61,10 +62,6 @@ public class Tank : MonoBehaviour
     {
         playerInput.x = Input.GetAxis("Horizontal");
         playerInput.y = Input.GetAxis("Vertical");
-        if(playerInput.y>0f)
-        {
-            DistanceTraveled.Invoke();
-        }
         playerInput = Vector2.ClampMagnitude(playerInput,1f);
         transform.Rotate(Vector3.up * rotationSpeed * playerInput.x * Time.deltaTime );
         desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
@@ -168,6 +165,9 @@ public class Tank : MonoBehaviour
     {
         transform.localPosition = initialPosition;
     }
-
+    void Distance()
+    {
+        GameManager.instance.AddDistance(initialPosition, transform.localPosition);
+    }
     
 }

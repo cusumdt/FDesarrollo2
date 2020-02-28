@@ -17,7 +17,7 @@ public class UIDefeat : MonoBehaviour
         string cantDistance= result.ToString();
         string cantPoints = GameManager.instance.points.ToString();
         textPoints.text = "Points: " + cantPoints ;
-        textDistance.text ="Distance: " + cantDistance;
+        textDistance.text ="Distance: " + cantDistance +"m";
         textEnemys.text ="Enemies Destroyed: "+ cantEnemys;
     }
 
