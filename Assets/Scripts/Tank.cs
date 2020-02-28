@@ -157,9 +157,13 @@ public class Tank : MonoBehaviour
     {
         RaycastHit hit;
         Physics.Raycast(transform.position, -transform.up,out hit,maxRayDistance, rayMask);
-    
         Quaternion resultRotation = Quaternion.FromToRotation(transform.up,hit.normal) *transform.rotation;
         transform.rotation = Quaternion.Lerp(transform.rotation, resultRotation,smoothRotation);
     }
+    void OnTriggerEnter(Collider other)
+    {
+        transform.localPosition = new Vector3(163.6f,0.0f,181.2f);
+    }
 
+    
 }
